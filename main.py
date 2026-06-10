@@ -1,100 +1,105 @@
-# ai_semiconductor_analysis.py
-
-import yfinance as yf
-import pandas as pd
+import tkinter as tk
+from tkinter import simpledialog
 import matplotlib.pyplot as plt
-from datetime import datetime, timedelta
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
-# 분석 대상 기업
-companies = {
-    "NVIDIA": "NVDA",
-    "AMD": "AMD",
-    "TSMC": "TSM",
-    "Intel": "INTC"
-}
 
-# 최근 3년 주가 데이터
-end_date = datetime.today()
-start_date = end_date - timedelta(days=365 * 3)
+class App:
+    def __init__(self, root):
+        self.root = root
+        self.root.title("반도체 선호도 분석 앱")
 
-price_data = pd.DataFrame()
+        # =========================
+        # 1. 닉네임 입력 (첫 창)
+        # =========================
+        self.nickname = simpledialog.askstring("닉네임", "닉네임을 입력하세요:")
+        if not self.nickname:
+            self.nickname = "사용자"
 
-for name, ticker in companies.items():
-    stock = yf.download(
-        ticker,
-        start=start_date,
-        end=end_date,
-        auto_adjust=True,
-        progress=False
-    )
+        # =========================
+        # 2. UI 프레임
+        # =========================
+        self.frame = tk.Frame(root)
+        self.frame.pack(pady=10)
 
-    price_data[name] = stock["Close"]
+        tk.Label(
+            self.frame,
+            text=f"{self.nickname}님의 반도체 선호도 설문",
+            font=("Arial", 14, "bold")
+        ).pack()
 
-# 수익률 계산
-returns = (price_data / price_data.iloc[0] - 1) * 100
+        # =========================
+        # 3. 데이터 (연령대)
+        # =========================
+        self.values = {
+            "10대": tk.IntVar(value=50),
+            "20대": tk.IntVar(value=80),
+            "30대": tk.IntVar(value=70),
+            "40대": tk.IntVar(value=60),
+            "50대+": tk.IntVar(value=40),
+        }
 
-plt.figure(figsize=(12, 6))
-for company in returns.columns:
-    plt.plot(
-        returns.index,
-        returns[company],
-        label=company
-    )
+        # =========================
+        # 4. 슬라이더 UI
+        # =========================
+        for age, var in self.values.items():
+            row = tk.Frame(root)
+            row.pack()
 
-plt.title("AI Semiconductor Companies Stock Performance")
-plt.ylabel("Return (%)")
-plt.xlabel("Date")
-plt.legend()
-plt.grid(True)
-plt.tight_layout()
-plt.show()
+            tk.Label(row, text=age, width=8).pack(side="left")
 
-# 기업 가치 지표 수집
-valuation_data = []
+            tk.Scale(
+                row,
+                from_=0,
+                to=100,
+                orient="horizontal",
+                variable=var,
+                command=self.update_chart
+            ).pack(side="left")
 
-for name, ticker in companies.items():
-    info = yf.Ticker(ticker).info
+        # =========================
+        # 5. 그래프 영역
+        # =========================
+        self.fig, self.ax = plt.subplots(figsize=(5, 3))
+        self.canvas = FigureCanvasTkAgg(self.fig, master=root)
+        self.canvas.get_tk_widget().pack(pady=10)
 
-    valuation_data.append({
-        "Company": name,
-        "Market Cap ($B)": round(
-            info.get("marketCap", 0) / 1e9, 2
-        ),
-        "Forward PE": info.get("forwardPE"),
-        "Price/Sales": info.get("priceToSalesTrailing12Months"),
-        "Revenue Growth": info.get("revenueGrowth")
-    })
+        # 버튼
+        tk.Button(
+            root,
+            text="결과 보기",
+            command=self.update_chart,
+            bg="skyblue"
+        ).pack(pady=5)
 
-valuation_df = pd.DataFrame(valuation_data)
+        self.draw_chart()
 
-print("\n=== Valuation Metrics ===")
-print(valuation_df)
+    # =========================
+    # 그래프 그리기
+    # =========================
+    def draw_chart(self):
+        self.ax.clear()
 
-# 성장성 점수 계산
-valuation_df["Growth Score"] = (
-    valuation_df["Revenue Growth"].fillna(0) * 100
-)
+        labels = list(self.values.keys())
+        data = [v.get() for v in self.values.values()]
 
-valuation_df = valuation_df.sort_values(
-    by="Growth Score",
-    ascending=False
-)
+        self.ax.bar(labels, data, color=["green", "blue", "orange", "purple", "red"])
+        self.ax.set_ylim(0, 100)
+        self.ax.set_title("전자공학·반도체 선호도")
 
-print("\n=== Growth Ranking ===")
-print(
-    valuation_df[
-        ["Company", "Growth Score"]
-    ]
-)
+        self.canvas.draw()
 
-# 시각화
-plt.figure(figsize=(10, 5))
-plt.bar(
-    valuation_df["Company"],
-    valuation_df["Growth Score"]
-)
+    # =========================
+    # 업데이트
+    # =========================
+    def update_chart(self, event=None):
+        self.draw_chart()
 
-plt.title("Revenue Growth Comparison")
-plt.ylabel("Growth Score")
-plt.tight_layout()
-plt.show()
+
+# =========================
+# 실행
+# =========================
+if __name__ == "__main__":
+    root = tk.Tk()
+    app = App(root)
+    root.mainloop()
