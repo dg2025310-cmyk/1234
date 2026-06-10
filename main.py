@@ -3,81 +3,55 @@ import matplotlib.pyplot as plt
 
 st.set_page_config(page_title="전공 선호도 비교", layout="centered")
 
-st.title("📊 전자공학 vs 반도체학과 나이대별 선호도")
+st.title("📊 전자공학 vs 반도체학과 선호도 비교")
 
-st.write("각 연령대별로 전자공학과와 반도체학과 선호도를 입력하세요.")
+st.write("연령대별 선호도를 입력하면 두 전공을 비교합니다.")
+
+labels = ["10대", "20대", "30대", "40대", "50대+"]
 
 # =========================
-# 닉네임
+# 전자공학 입력
 # =========================
-name = st.text_input("닉네임 입력")
+st.subheader("📘 전자공학과 선호도")
 
-if name:
-    st.subheader(f"👤 {name}님의 데이터")
+ee_values = [
+    st.slider("10대 (전자공학)", 0, 100, 60),
+    st.slider("20대 (전자공학)", 0, 100, 80),
+    st.slider("30대 (전자공학)", 0, 100, 70),
+    st.slider("40대 (전자공학)", 0, 100, 60),
+    st.slider("50대+ (전자공학)", 0, 100, 50),
+]
 
-    st.markdown("### 📘 전자공학과 선호도")
+# =========================
+# 반도체 입력
+# =========================
+st.subheader("📙 반도체학과 선호도")
 
-    ee_10 = st.slider("전자공학 - 10대", 0, 100, 60)
-    ee_20 = st.slider("전자공학 - 20대", 0, 100, 80)
-    ee_30 = st.slider("전자공학 - 30대", 0, 100, 70)
-    ee_40 = st.slider("전자공학 - 40대", 0, 100, 60)
-    ee_50 = st.slider("전자공학 - 50대+", 0, 100, 50)
+si_values = [
+    st.slider("10대 (반도체)", 0, 100, 70),
+    st.slider("20대 (반도체)", 0, 100, 90),
+    st.slider("30대 (반도체)", 0, 100, 85),
+    st.slider("40대 (반도체)", 0, 100, 75),
+    st.slider("50대+ (반도체)", 0, 100, 60),
+]
 
-    st.markdown("### 📙 반도체학과 선호도")
+# =========================
+# 비교 그래프
+# =========================
+st.subheader("⚖️ 비교 결과")
 
-    si_10 = st.slider("반도체 - 10대", 0, 100, 70)
-    si_20 = st.slider("반도체 - 20대", 0, 100, 90)
-    si_30 = st.slider("반도체 - 30대", 0, 100, 85)
-    si_40 = st.slider("반도체 - 40대", 0, 100, 75)
-    si_50 = st.slider("반도체 - 50대+", 0, 100, 60)
+fig, ax = plt.subplots()
 
-    labels = ["10대", "20대", "30대", "40대", "50대+"]
+x = range(len(labels))
+width = 0.35
 
-    # =========================
-    # 그래프 1 (전자공학)
-    # =========================
-    fig1, ax1 = plt.subplots()
-    ax1.bar(labels, [ee_10, ee_20, ee_30, ee_40, ee_50], color="blue")
-    ax1.set_title("전자공학과 선호도")
-    ax1.set_ylim(0, 100)
+ax.bar([i - width/2 for i in x], ee_values, width=width, label="전자공학", color="blue")
+ax.bar([i + width/2 for i in x], si_values, width=width, label="반도체", color="red")
 
-    st.pyplot(fig1)
+ax.set_xticks(list(x))
+ax.set_xticklabels(labels)
+ax.set_ylim(0, 100)
+ax.legend()
+ax.set_title("연령대별 전공 선호도 비교")
 
-    # =========================
-    # 그래프 2 (반도체)
-    # =========================
-    fig2, ax2 = plt.subplots()
-    ax2.bar(labels, [si_10, si_20, si_30, si_40, si_50], color="red")
-    ax2.set_title("반도체학과 선호도")
-    ax2.set_ylim(0, 100)
-
-    st.pyplot(fig2)
-
-    # =========================
-    # 비교 그래프
-    # =========================
-    st.markdown("### ⚖️ 비교 그래프")
-
-    fig3, ax3 = plt.subplots()
-
-    width = 0.35
-    x = range(len(labels))
-
-    ax3.bar([i - width/2 for i in x],
-            [ee_10, ee_20, ee_30, ee_40, ee_50],
-            width=width,
-            label="전자공학",
-            color="blue")
-
-    ax3.bar([i + width/2 for i in x],
-            [si_10, si_20, si_30, si_40, si_50],
-            width=width,
-            label="반도체",
-            color="red")
-
-    ax3.set_xticks(list(x))
-    ax3.set_xticklabels(labels)
-    ax3.set_ylim(0, 100)
-    ax3.legend()
-
-    st.pyplot(fig3)
+st.pyplot(fig)
